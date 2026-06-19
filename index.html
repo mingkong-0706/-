@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arg 作品导航页</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        body {
+            background-color: #0c0c14;
+            color: #e6e6ff;
+            padding: 40px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+            border-bottom: 1px solid #333366;
+            padding-bottom: 20px;
+        }
+        .header h1 {
+            font-size: 36px;
+            color: #79a8ff;
+            letter-spacing: 3px;
+        }
+        .header p {
+            margin-top: 10px;
+            color: #99aacc;
+            font-size: 16px;
+        }
+        .section-title {
+            font-size: 24px;
+            margin: 50px 0 25px;
+            padding-left: 12px;
+            border-left: 4px solid #4a88ff;
+            color: #c0d8ff;
+        }
+        .works-box {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+        }
+        .work-card {
+            background: #141426;
+            border: 1px solid #222244;
+            border-radius: 10px;
+            padding: 22px;
+            transition: all 0.3s ease;
+        }
+        .work-card:hover {
+            border-color: #5898ff;
+            transform: translateY(-6px);
+            box-shadow: 0 8px 24px rgba(74, 136, 255, 0.15);
+        }
+        .work-card h3 {
+            font-size: 20px;
+            color: #8cb8ff;
+            margin-bottom: 12px;
+        }
+        .work-desc {
+            color: #b0c4e8;
+            line-height: 1.7;
+            font-size: 15px;
+            margin-bottom: 18px;
+        }
+        .jump-btn {
+            display: inline-block;
+            padding: 9px 20px;
+            background: #3066cc;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+        .jump-btn:hover {
+            background: #4a88ff;
+        }
+        .divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, #335599, transparent);
+            margin: 70px 0;
+        }
+        footer {
+            text-align: center;
+            margin-top: 80px;
+            color: #667799;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ARG 解谜作品导航</h1>
+        <p>原创自制作品 · 优质转载ARG合集</p>
+    </div>
+
+    <!-- 第一板块：我的原创作品 -->
+    <h2 class="section-title">我的原创ARG作品</h2>
+    <div class="works-box">
+        <!-- 作品卡片1 可复制新增 -->
+        <div class="work-card">
+            <h3>暂无作品</h3>
+            <div class="work-desc">
+                暂无作品,尽情期待
+            </div>
+            <a href="404.html" target="_blank" class="jump-btn">测试按钮</a>
+        </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- 第二板块：转载ARG作品 -->
+    <h2 class="section-title">转载优质ARG作品</h2>
+    <div class="works-box">
+        <!-- 转载卡片1 -->
+        <div class="work-card">
+            <h3>404档案馆</h3>
+            <div class="work-desc">
+                抖音大佬的作品
+            </div>
+            <a href="./404档案馆.html" target="_blank" class="jump-btn">跳转原作页面</a>
+        </div>
+    </div>
+
+    <footer>
+        © 2026 ARG作品导航 | 原创作品版权归本人所有，转载作品版权归属原作者
+    </footer>
+</body>
+</html>
