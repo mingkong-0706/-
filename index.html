@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="角色扮演">
+<meta name="theme-color" content="#0f1117" id="metaThemeColor">
+<meta name="format-detection" content="telephone=no">
+<meta http-equiv="Content-Security-Policy"
+  content="default-src 'self'; connect-src 'self' https: http:; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; font-src 'self' data:;">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="style.css">
+<title>角色扮演 · 分支对话</title>
+<script>
+(function(){
+  function hexToHsl(hex) {
+    hex = hex.replace('#', '');
+    if (hex.length === 3) hex = hex.split('').map(c => c+c).join('');
+    var r = parseInt(hex.substr(0,2),16) / 255;
+    var g = parseInt(hex.substr(2,2),16) / 255;
+    var b = parseInt(hex.substr(4,2),16) / 255;
+    var max = Math.max(r,g,b), min = Math.min(r,g,b);
+    var h, s, l = (max+min)/2;
+    if (max === min) { h = s = 0; }
+    else {
+      var d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+        case r: h = ((g-b)/d + (g<b?6:0)); break;
+        case g: h = ((b-r)/d + 2); break;
+        case b: h = ((r-g)/d + 4); break;
+      }
+      h *= 60;
+    }
+    return { h: h, s: s*100, l: l*100 };
+  }
+  function applyAllColors(accentHex, themeMode) {
+    var hsl = hexToHsl(accentHex);
+    var h = Math.round(hsl.h);
+    var root = document.documentElement;
+    root.style.setProperty('--accent', accentHex);
+    if (themeMode === 'oled') {
+      root.style.setProperty('--bg',            '#000000');
+      root.style.setProperty('--bg-elev',       `hsl(${h}, 30%, 5%)`);
+      root.style.setProperty('--bg-elev2',      `hsl(${h}, 28%, 9%)`);
+      root.style.setProperty('--bg-input',      `hsl(${h}, 32%, 4%)`);
+      root.style.setProperty('--border',        `hsl(${h}, 26%, 14%)`);
+      root.style.setProperty('--border-strong', `hsl(${h}, 30%, 22%)`);
+      root.style.setProperty('--btn-bg',        `hsl(${h}, 28%, 10%)`);
+      root.style.setProperty('--btn-active',    `hsl(${h}, 34%, 17%)`);
+      root.style.setProperty('--btn-fg',        `hsl(${h}, 50%, 88%)`);
+      root.style.setProperty('--accent-soft',   `hsl(${h}, 78%, 72%)`);
+      root.style.setProperty('--brand',         `hsl(${h}, 78%, 72%)`);
+      root.style.setProperty('--text',          `hsl(${h}, 22%, 94%)`);
+      root.style.setProperty('--text-dim',      `hsl(${h}, 18%, 74%)`);
+      root.style.setProperty('--text-mute',     `hsl(${h}, 16%, 55%)`);
+      root.style.setProperty('--text-faint',    `hsl(${h}, 14%, 40%)`);
+      root.style.setProperty('--ai-bubble-bg',  `hsl(${h}, 28%, 7%)`);
+      root.style.setProperty('--ai-bubble-fg',  `hsl(${h}, 20%, 90%)`);
+      root.style.setProperty('--user-bubble-bg', accentHex);
+      root.style.setProperty('--user-bubble-fg', hsl.l > 65 ? `hsl(${h}, 35%, 10%)` : '#ffffff');
+      root.style.setProperty('--toast-bg',      `hsl(${h}, 28%, 12%)`);
+      root.style.setProperty('--toast-fg',      `hsl(${h}, 35%, 94%)`);
+      root.style.setProperty('--scrollbar',     `hsl(${h}, 28%, 16%)`);
+      root.style.setProperty('--danger-bg',     `hsl(0, 45%, 16%)`);
+      root.style.setProperty('--danger-fg',     `hsl(0, 75%, 76%)`);
+      root.style.setProperty('--ok',            `hsl(150, 62%, 58%)`);
+      root.style.setProperty('--bad',           `hsl(0, 75%, 64%)`);
+      root.style.setProperty('--mask',          'rgba(0,0,0,.75)');
+      root.style.setProperty('--shadow',        'rgba(0,0,0,.6)');
+    } else if (themeMode === 'dark') {
+      root.style.setProperty('--bg',            `hsl(${h}, 38%, 6%)`);
+      root.style.setProperty('--bg-elev',       `hsl(${h}, 34%, 10%)`);
+      root.style.setProperty('--bg-elev2',      `hsl(${h}, 32%, 15%)`);
+      root.style.setProperty('--bg-input',      `hsl(${h}, 36%, 8%)`);
+      root.style.setProperty('--border',        `hsl(${h}, 30%, 20%)`);
+      root.style.setProperty('--border-strong', `hsl(${h}, 34%, 30%)`);
+      root.style.setProperty('--btn-bg',        `hsl(${h}, 32%, 16%)`);
+      root.style.setProperty('--btn-active',    `hsl(${h}, 38%, 23%)`);
+      root.style.setProperty('--btn-fg',        `hsl(${h}, 50%, 90%)`);
+      root.style.setProperty('--accent-soft',   `hsl(${h}, 78%, 74%)`);
+      root.style.setProperty('--brand',         `hsl(${h}, 78%, 74%)`);
+      root.style.setProperty('--text',          `hsl(${h}, 25%, 95%)`);
+      root.style.setProperty('--text-dim',      `hsl(${h}, 20%, 76%)`);
+      root.style.setProperty('--text-mute',     `hsl(${h}, 18%, 58%)`);
+      root.style.setProperty('--text-faint',    `hsl(${h}, 15%, 44%)`);
+      root.style.setProperty('--ai-bubble-bg',  `hsl(${h}, 32%, 13%)`);
+      root.style.setProperty('--ai-bubble-fg',  `hsl(${h}, 22%, 92%)`);
+      root.style.setProperty('--user-bubble-bg', accentHex);
+      root.style.setProperty('--user-bubble-fg', hsl.l > 65 ? `hsl(${h}, 35%, 12%)` : '#ffffff');
+      root.style.setProperty('--toast-bg',      `hsl(${h}, 32%, 17%)`);
+      root.style.setProperty('--toast-fg',      `hsl(${h}, 35%, 94%)`);
+      root.style.setProperty('--scrollbar',     `hsl(${h}, 32%, 22%)`);
+      root.style.setProperty('--danger-bg',     `hsl(0, 42%, 20%)`);
+      root.style.setProperty('--danger-fg',     `hsl(0, 72%, 78%)`);
+      root.style.setProperty('--ok',            `hsl(150, 60%, 60%)`);
+      root.style.setProperty('--bad',           `hsl(0, 72%, 66%)`);
+      root.style.setProperty('--mask',          'rgba(0,0,0,.65)');
+      root.style.setProperty('--shadow',        'rgba(0,0,0,.45)');
+    } else {
+      root.style.setProperty('--bg',            `hsl(${h}, 50%, 93%)`);
+      root.style.setProperty('--bg-elev',       `hsl(${h}, 45%, 97%)`);
+      root.style.setProperty('--bg-elev2',      `hsl(${h}, 40%, 99%)`);
+      root.style.setProperty('--bg-input',      `hsl(${h}, 35%, 100%)`);
+      root.style.setProperty('--border',        `hsl(${h}, 40%, 86%)`);
+      root.style.setProperty('--border-strong', `hsl(${h}, 40%, 76%)`);
+      root.style.setProperty('--btn-bg',        `hsl(${h}, 45%, 94%)`);
+      root.style.setProperty('--btn-active',    `hsl(${h}, 50%, 88%)`);
+      root.style.setProperty('--btn-fg',        `hsl(${h}, 45%, 22%)`);
+      root.style.setProperty('--accent-soft',   `hsl(${h}, 62%, 38%)`);
+      root.style.setProperty('--brand',         `hsl(${h}, 62%, 38%)`);
+      root.style.setProperty('--text',          `hsl(${h}, 35%, 12%)`);
+      root.style.setProperty('--text-dim',      `hsl(${h}, 28%, 30%)`);
+      root.style.setProperty('--text-mute',     `hsl(${h}, 20%, 48%)`);
+      root.style.setProperty('--text-faint',    `hsl(${h}, 18%, 64%)`);
+      root.style.setProperty('--ai-bubble-bg',  `hsl(${h}, 40%, 100%)`);
+      root.style.setProperty('--ai-bubble-fg',  `hsl(${h}, 35%, 14%)`);
+      root.style.setProperty('--user-bubble-bg', accentHex);
+      root.style.setProperty('--user-bubble-fg', hsl.l > 65 ? `hsl(${h}, 40%, 14%)` : '#ffffff');
+      root.style.setProperty('--toast-bg',      `hsl(${h}, 40%, 22%)`);
+      root.style.setProperty('--toast-fg',      `hsl(${h}, 40%, 96%)`);
+      root.style.setProperty('--scrollbar',     `hsl(${h}, 35%, 80%)`);
+      root.style.setProperty('--danger-bg',     `hsl(0, 88%, 96%)`);
+      root.style.setProperty('--danger-fg',     `hsl(0, 68%, 42%)`);
+      root.style.setProperty('--ok',            `hsl(150, 60%, 36%)`);
+      root.style.setProperty('--bad',           `hsl(0, 72%, 50%)`);
+      root.style.setProperty('--mask',          'rgba(20,24,40,.35)');
+      root.style.setProperty('--shadow',        'rgba(0,0,0,.10)');
+    }
+  }
+  function resolveThemeMode() {
+    var saved = localStorage.getItem('rp_theme') || 'auto';
+    if (saved === 'auto') {
+      return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    return saved;
+  }
+  var mode = resolveThemeMode();
+  document.documentElement.setAttribute('data-theme', mode);
+  var accent = localStorage.getItem('rp_accent') || '#4a6cf7';
+  applyAllColors(accent, mode);
+  var scale = localStorage.getItem('rp_fontScale');
+  if (scale) document.documentElement.style.setProperty('--font-scale', scale);
+  window.__applyAllColors = applyAllColors;
+  window.__resolveThemeMode = resolveThemeMode;
+})();
+</script>
+<style>
+#gateMask {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--bg, #0f1117);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  font-family: -apple-system, "SF Pro Text", "PingFang SC", "Segoe UI", sans-serif;
+}
+#gateMask.hide { display: none; }
+.gate-box {
+  width: 100%; max-width: 320px;
+  display: flex; flex-direction: column; gap: 12px;
+  text-align: center;
+}
+.gate-icon { font-size: 44px; }
+.gate-box h2 { font-size: 17px; color: var(--text, #fff); font-weight: 500; margin: 0; }
+.gate-sub { font-size: 12px; color: var(--text-mute, #888); margin: 0; }
+.gate-input-wrap { position: relative; }
+.gate-box input {
+  background: var(--bg-input, #1a1d24);
+  border: 1px solid var(--border-strong, #333);
+  border-radius: 10px; padding: 12px 44px 12px 14px;
+  color: var(--text, #fff); font-size: 16px;
+  font-family: inherit; width: 100%;
+  box-sizing: border-box;
+}
+.gate-box input:focus { outline: none; border-color: var(--accent, #4a6cf7); }
+.gate-eye {
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  background: transparent; border: none; color: var(--text-mute, #888);
+  font-size: 16px; cursor: pointer; padding: 8px; border-radius: 6px;
+}
+.gate-eye:active { background: var(--bg-elev2, #222); }
+.gate-box button.gate-submit {
+  background: var(--accent, #4a6cf7); color: #fff;
+  border: none; border-radius: 10px;
+  padding: 12px; font-size: 15px;
+  cursor: pointer; min-height: 46px;
+  font-family: inherit;
+}
+.gate-box button.gate-submit:active { transform: scale(0.98); }
+.gate-box button.gate-submit:disabled { opacity: .5; }
+.gate-err { font-size: 13px; color: var(--bad, #ef4444); min-height: 18px; text-align: center; }
+.gate-hint { font-size: 11px; color: var(--text-mute, #888); text-align: center; }
+</style>
+</head>
+<body>
+
+<noscript>
+  <div style="padding:40px;text-align:center;color:#fff;background:#0f1117;min-height:100vh;">
+    本站需要启用 JavaScript 才能使用。
+  </div>
+</noscript>
+
+<div id="gateMask">
+  <div class="gate-box">
+    <div class="gate-icon">🔒</div>
+    <h2>请输入访问密钥</h2>
+    <p class="gate-sub">本站为私有部署，需验证后进入</p>
+    <div class="gate-input-wrap">
+      <input id="gateInput" type="password" placeholder="密钥" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <button class="gate-eye" id="gateEye" type="button" title="显示/隐藏">👁</button>
+    </div>
+    <button class="gate-submit" id="gateBtn" type="button">进入</button>
+    <div class="gate-err" id="gateErr"></div>
+    <div class="gate-hint" id="gateHint"></div>
+  </div>
+</div>
+
+<header>
+  <span class="brand">🎭</span>
+  <select id="charSelect"></select>
+  <select id="convSelect" title="会话"></select>
+  <button id="newConvBtn" title="新建会话">＋</button>
+  <select id="apiSelect"></select>
+  <button id="manageBtn">角色</button>
+  <button id="groupBtn" title="会话设置 / 群聊">👥</button>
+  <button id="exportMdBtn" title="导出当前分支为 Markdown">📄</button>
+  <button id="searchBtn" title="搜索消息">🔍</button>
+  <div class="actions">
+    <span class="stat"><span class="api-dot bad" id="apiDot"></span><span id="apiStatus">未配</span></span>
+    <button id="themeBtn" title="切换主题">🌓</button>
+    <button id="apiToggle" title="设置">⚙️</button>
+  </div>
+  <span class="stat" style="width:100%; margin-top:2px;">缓存：<b id="hitRate">—</b> <span id="tokenStat"></span> <span id="branchStat" style="margin-left:8px;"></span></span>
+</header>
+
+<div id="searchBar">
+  <input id="searchInput" placeholder="搜索消息内容…" autocomplete="off">
+  <span id="searchCount">0 / 0</span>
+  <button id="searchPrev">‹</button>
+  <button id="searchNext">›</button>
+  <button id="searchClose">✕</button>
+</div>
+
+<div id="apiPanel">
+  <div class="section" style="margin-top:0; padding-top:0; border-top:none;">
+    <h3>外观</h3>
+    <div class="field">
+      <label>主题模式</label>
+      <div class="btn-row">
+        <button id="themeAuto">跟随系统</button>
+        <button id="themeLight">☀️ 浅色</button>
+        <button id="themeDark">🌙 深色</button>
+        <button id="themeOled">⬛ 纯黑</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>主题色（会改变整套背景色调）</label>
+      <div class="color-row">
+        <input type="color" id="accentPicker" value="#4a6cf7">
+        <div class="swatches" id="swatches"></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>字号：<span id="fontScaleLabel">100%</span></label>
+      <input type="range" id="fontScaleRange" min="85" max="140" step="5" value="100">
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>本地加密 PIN（可选）</h3>
+    <div class="tip">设置后 API Key 会用 AES-GCM 加密存储在本机。忘记 PIN 需重新填写 Key。</div>
+    <div class="field"><label>PIN（留空 = 不加密）</label>
+      <input id="pinInput" type="password" placeholder="例如 6 位数字" autocapitalize="off" autocorrect="off">
+    </div>
+    <div class="btn-row">
+      <button class="primary" id="pinSaveBtn">保存 PIN</button>
+    </div>
+    <div class="tip" id="pinStatus"></div>
+  </div>
+
+  <div class="section">
+    <h3>API 配置</h3>
+    <div id="apiList"></div>
+    <div class="btn-row">
+      <button class="primary" id="addApiBtn">＋ 新建配置</button>
+    </div>
+  </div>
+
+  <div id="apiEditView" style="display:none">
+    <div class="field">
+      <label>快速模板</label>
+      <div class="presets">
+        <button data-preset="deepseek">DeepSeek</button>
+        <button data-preset="openai">OpenAI</button>
+        <button data-preset="siliconflow">SiliconFlow</button>
+        <button data-preset="moonshot">Moonshot</button>
+        <button data-preset="zhipu">智谱</button>
+        <button data-preset="dashscope">通义千问</button>
+        <button data-preset="ollama">本地 Ollama</button>
+        <button data-preset="custom">自定义</button>
+      </div>
+    </div>
+
+    <div id="modelPicker" class="model-picker" style="display:none;">
+      <div class="model-picker-title">
+        <span id="modelPickerName">选择模型</span>
+        <button id="modelPickerClose">✕</button>
+      </div>
+      <div class="model-picker-list" id="modelPickerList"></div>
+      <div class="model-picker-hint">选一个会自动填好地址和模型名，你只需再填 API Key</div>
+    </div>
+
+    <div id="apiForm">
+      <div class="field"><label>配置名称</label><input id="apiName" placeholder="例如：DeepSeek 官方" autocapitalize="off" autocorrect="off"></div>
+      <div class="field"><label>API Base</label><input id="apiBase" placeholder="https://api.deepseek.com" autocapitalize="off" autocorrect="off"></div>
+      <div class="field"><label>模型名</label><input id="apiModel" placeholder="deepseek-chat" autocapitalize="off" autocorrect="off"></div>
+      <div class="field"><label>API Key（仅存本机）</label><input id="apiKey" type="password" placeholder="sk-..." autocapitalize="off" autocorrect="off"></div>
+    </div>
+
+    <div class="btn-row">
+      <button class="primary" id="saveApiBtn">保存</button>
+      <button id="cancelApiBtn">取消</button>
+      <button class="danger" id="deleteApiBtn" style="display:none">删除</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>知识库</h3>
+    <div class="tip">每个角色的知识库独立。对话中如果提到关键词，对应内容会自动注入到 AI 的上下文里。</div>
+    <div class="field">
+      <label>选择角色</label>
+      <select id="kbCharSelect"></select>
+    </div>
+    <div class="btn-row">
+      <button class="primary" id="kbAddBtn">＋ 新增条目</button>
+    </div>
+    <div id="kbList"></div>
+  </div>
+
+  <div class="section">
+    <h3>跨软件角色卡</h3>
+    <div class="tip">
+      兼容 <strong>SillyTavern / TavernAI</strong> 角色卡格式（V1/V2），支持 <strong>.json</strong> 与 <strong>.png</strong>。
+    </div>
+    <div class="btn-row">
+      <button id="importCardBtn">📥 导入角色卡</button>
+      <input id="importCardFile" type="file" accept=".json,.png" style="display:none">
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>本地备份</h3>
+    <div class="tip">导出后存到「文件」App / iCloud / 微信，数据丢了可导入恢复。导出时可选择是否包含 API Key。</div>
+    <div class="btn-row">
+      <button id="exportBtn">📤 导出全部</button>
+      <button id="importBtn">📥 导入全部</button>
+      <input id="importFile" type="file" accept=".json" style="display:none">
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>云端备份（WebDAV）</h3>
+    <div class="tip">
+      数据存在<strong>你自己的云盘</strong>。推荐 <strong>坚果云</strong>。云端备份默认<strong>不包含 API Key</strong>。
+    </div>
+    <div class="field"><label>WebDAV 地址</label><input id="davUrl" placeholder="https://dav.jianguoyun.com/dav/" autocapitalize="off" autocorrect="off"></div>
+    <div class="field"><label>账号（邮箱）</label><input id="davUser" placeholder="you@example.com" autocapitalize="off" autocorrect="off"></div>
+    <div class="field"><label>应用密码</label><input id="davPass" type="password" placeholder="应用密码" autocapitalize="off" autocorrect="off"></div>
+    <div class="field"><label>云端文件路径</label><input id="davPath" placeholder="roleplay/backup.json" autocapitalize="off" autocorrect="off"></div>
+    <div class="btn-row">
+      <button class="primary" id="davSaveBtn">保存配置</button>
+      <button id="davTestBtn">测试连接</button>
+    </div>
+    <div class="btn-row">
+      <button class="primary" id="davUploadBtn">☁️ 立即上传</button>
+      <button id="davDownloadBtn">⬇️ 从云端恢复</button>
+    </div>
+    <div class="tip" id="davStatus" style="margin-top:8px;"></div>
+    <div class="field" style="flex-direction:row; align-items:center; gap:8px; margin-top:10px;">
+      <input type="checkbox" id="davAutoSync" style="width:auto; min-width:20px; height:20px;">
+      <label style="margin:0;">每次对话后自动上传</label>
+    </div>
+  </div>
+</div>
+
+<div id="chat"></div>
+
+<footer>
+  <div class="input-wrap">
+    <textarea id="input" rows="1" placeholder="说点什么…" autocapitalize="sentences" autocorrect="on"></textarea>
+    <button id="sendBtn">↑</button>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal-mask" id="charModalMask">
+  <div class="modal">
+    <h2 id="charModalTitle">角色管理</h2>
+    <div id="charListView">
+      <div class="card-list" id="cardList"></div>
+      <div class="modal-actions">
+        <button class="primary" id="addCharBtn">＋ 新建角色</button>
+        <button class="ghost" id="closeCharBtn">关闭</button>
+      </div>
+    </div>
+    <div id="charEditView" style="display:none">
+      <div class="row">
+        <div style="flex:0 0 90px"><label>头像 emoji</label><input id="editEmoji" maxlength="4" placeholder="🙂"></div>
+        <div><label>角色名</label><input id="editName" placeholder="你的角色名"></div>
+      </div>
+      <label>性格 / 人设（完全由你编写）</label>
+      <textarea id="editPrompt" placeholder="在这里写你的人设…"></textarea>
+      <label>开场白（选填，新建对话时自动插入）</label>
+      <input id="editFirstMes" placeholder="例如：*她抬起头看着你*">
+      <label>简介（选填）</label>
+      <input id="editDesc" placeholder="一句话简介">
+      <div class="modal-actions">
+        <button class="primary" id="saveCharBtn">保存</button>
+        <button class="ghost" id="cancelEditBtn">取消</button>
+        <button class="ghost full" id="exportCardBtn">📤 导出为角色卡</button>
+        <button class="danger full" id="deleteCharBtn" style="display:none">删除此角色</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-mask" id="kbModalMask">
+  <div class="modal">
+    <h2 id="kbModalTitle">知识条目</h2>
+    <div class="field"><label>关键词（用逗号分隔）</label>
+      <input id="kbKeys" placeholder="例如：海边, 图书馆, 阿拉">
+    </div>
+    <div class="field"><label>内容（命中关键词时注入 AI 上下文）</label>
+      <textarea id="kbContent" placeholder="例如：海边小镇常年有雾，图书馆建在海崖上，二楼能看到灯塔。"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="primary" id="kbSaveBtn">保存</button>
+      <button class="ghost" id="kbCancelBtn">取消</button>
+      <button class="danger full" id="kbDeleteBtn" style="display:none">删除此条目</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-mask" id="groupModalMask">
+  <div class="modal">
+    <h2>会话设置</h2>
+
+    <label>会话名称</label>
+    <input id="groupTitle" placeholder="会话名称">
+
+    <label style="margin-top:16px;">群聊参与者（可多选，每个参与者绑定一个角色 + 一个 API）</label>
+    <div id="groupMemberList" class="group-member-list"></div>
+
+    <div class="btn-row" style="margin-top:8px;">
+      <button class="primary" id="groupAddMemberBtn">＋ 添加参与者</button>
+    </div>
+
+    <div id="groupMemberEdit" style="display:none; margin-top:12px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:10px;">
+      <label>角色</label>
+      <select id="groupMemberChar"></select>
+      <label>API</label>
+      <select id="groupMemberApi"></select>
+      <label>显示名（选填，留空用角色名）</label>
+      <input id="groupMemberName" placeholder="例如：阿拉">
+      <label>发言顺序（数字越小越先发言）</label>
+      <input id="groupMemberOrder" type="number" min="0" step="1" value="0">
+      <div class="btn-row">
+        <button class="primary" id="groupMemberSave">保存</button>
+        <button id="groupMemberCancel">取消</button>
+      </div>
+    </div>
+
+    <div class="modal-actions" style="margin-top:18px;">
+      <button class="primary" id="groupSaveBtn">保存会话设置</button>
+      <button class="ghost" id="groupCloseBtn">关闭</button>
+      <button class="danger full" id="groupClearBtn" style="display:none;">清空群聊参与者（恢复单人模式）</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(async function() {
+  /* ============================================================
+   *  访问密钥哈希（SHA-256）
+   *  当前哈希对应明文：<XiaoYou01>
+   * ============================================================ */
+  const KEY_HASH = '1a715755db79616df8566d4b72b8861a4c313036e93680f3c05c967074c8fdb2';
+  /* ============================================================ */
+
+  const MAX_TRY = 5;
+  const LOCK_MS = 30000;
+  const TRY_KEY = 'rp_gate_try';
+  const LOCK_KEY = 'rp_gate_lock';
+
+  async function sha256(str) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return [...new Uint8Array(buf)].map(x => x.toString(16).padStart(2, '0')).join('');
+  }
+  function loadApp() {
+    document.getElementById('gateMask').classList.add('hide');
+    const s = document.createElement('script');
+    s.src = 'app.js';
+    s.onerror = () => {
+      document.getElementById('gateMask').classList.remove('hide');
+      document.getElementById('gateErr').textContent = '加载 app.js 失败';
+    };
+    document.body.appendChild(s);
+  }
+
+  if (sessionStorage.getItem('rp_gate_ok') === '1') { loadApp(); return; }
+
+  const input = document.getElementById('gateInput');
+  const btn = document.getElementById('gateBtn');
+  const err = document.getElementById('gateErr');
+  const hint = document.getElementById('gateHint');
+  const eye = document.getElementById('gateEye');
+
+  function getTryCount() { return Number(localStorage.getItem(TRY_KEY) || 0); }
+  function setTryCount(n) { localStorage.setItem(TRY_KEY, String(n)); }
+  function getLockUntil() { return Number(localStorage.getItem(LOCK_KEY) || 0); }
+  function setLockUntil(t) { localStorage.setItem(LOCK_KEY, String(t)); }
+
+  function refreshLockState() {
+    const lockUntil = getLockUntil();
+    const now = Date.now();
+    if (lockUntil > now) {
+      const left = Math.ceil((lockUntil - now) / 1000);
+      btn.disabled = true; input.disabled = true;
+      err.textContent = '尝试次数过多，请 ' + left + ' 秒后再试';
+      setTimeout(refreshLockState, 1000);
+      return false;
+    }
+    if (lockUntil && lockUntil <= now) {
+      localStorage.removeItem(LOCK_KEY);
+      setTryCount(0);
+      err.textContent = '';
+    }
+    btn.disabled = false; input.disabled = false;
+    return true;
+  }
+  function updateHint() {
+    const n = getTryCount();
+    if (n > 0 && n < MAX_TRY) hint.textContent = '已错误 ' + n + ' 次，最多 ' + MAX_TRY + ' 次';
+    else hint.textContent = '';
+  }
+  async function tryUnlock() {
+    if (!refreshLockState()) return;
+    const val = input.value;
+    if (!val) { err.textContent = '请输入密钥'; input.focus(); return; }
+    btn.disabled = true; err.textContent = '验证中…';
+    try {
+      const h = await sha256(val);
+      if (h === KEY_HASH) {
+        sessionStorage.setItem('rp_gate_ok', '1');
+        localStorage.removeItem(TRY_KEY);
+        localStorage.removeItem(LOCK_KEY);
+        err.textContent = '';
+        loadApp();
+      } else {
+        const n = getTryCount() + 1;
+        setTryCount(n);
+        if (n >= MAX_TRY) {
+          setLockUntil(Date.now() + LOCK_MS);
+          err.textContent = '错误次数过多，已锁定 ' + (LOCK_MS / 1000) + ' 秒';
+        } else {
+          err.textContent = '密钥错误，还可尝试 ' + (MAX_TRY - n) + ' 次';
+        }
+        input.value = ''; input.focus();
+        updateHint();
+      }
+    } catch (e) { err.textContent = '验证失败：' + e.message; }
+    finally { btn.disabled = false; refreshLockState(); }
+  }
+  btn.onclick = tryUnlock;
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); tryUnlock(); }
+  });
+  eye.onclick = () => {
+    if (input.type === 'password') { input.type = 'text'; eye.textContent = '🙈'; }
+    else { input.type = 'password'; eye.textContent = '👁'; }
+    input.focus();
+  };
+  refreshLockState(); updateHint();
+  setTimeout(() => { if (!input.disabled) input.focus(); }, 100);
+})();
+</script>
+
+</body>
+</html>
